@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<head>
+	<title>data-cleaner</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<header>
+		<h1>data-cleaner</h1>
+	</header>
+
+	<main>
+		<ul id = "issuesList">
+
+		</ul>
+	</main>
+
+	<script src = "main.js"></script>
+
+	<template id = "issueTemplate">
+		<li>
+			<h2 class = "description">Details</h2>
+
+			<table class = "detailsTable">
+			</table>
+
+			<h3>Location</h3>
+			<p>
+			<span><strong>Filename:</strong> <span class = "filename">?</span></span>
+			<span><strong>Line Number:</strong> <span class = "lineNumber">?</span></span>
+			</p>
+		</li>
+	</template>
+</body>

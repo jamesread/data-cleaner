@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option go_package = "gen/grpc";
+
+import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
+
+message ImportRequest {
+}
+
+message ImportResponse {
+  repeated Issue issues = 1;
+  string completed_date = 2;
+  int64 total_lines = 3;
+  repeated string source_files = 4;
+}
+
+message Issue {
+  string description = 1;
+
+  repeated RowAttribute expected = 2;
+  repeated RowAttribute actual = 3;
+  repeated RowAttribute intermediate = 4;
+
+  int64 location_line_number = 5;
+  string location_filename = 6;
+}
+
+message RowAttribute {
+    string key = 1;
+    string val = 2;
+}
+
+message ExportRequest {}
+
+message ReloadRequest {}
+
+message ReloadResponse {}
+
+service DataCleanerService {
+	rpc Import(ImportRequest) returns (ImportResponse) {
+		option (google.api.http) = {
+			get: "/api/Import"
+		};
+	}
+
+    rpc Export(ExportRequest) returns (google.api.HttpBody) {
+        option (google.api.http) = {
+            get: "/api/Export"
+        };
+    }
+
+    rpc Reload(ReloadRequest) returns (ReloadResponse) {
+        option (google.api.http) = {
+            get: "/api/Reload"
+        };
+    }
+}
