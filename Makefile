@@ -1,7 +1,9 @@
 default: service frontend
 
 service:
-	cd service && make
+	$(MAKE) -wC service default
 
 protocol:
-	buf generate
+	$(MAKE) -wC proto buf
+
+.PHONY: service protocol

@@ -3,8 +3,7 @@ deps:
   - buf.build/googleapis/googleapis
 lint:
   use:
-    - DEFAULT
-build:
+    - STANDARD
 breaking:
   use:
     - FILE
