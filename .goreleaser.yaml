@@ -1,0 +1,105 @@
+---
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+builds:
+  - id: data-cleaner
+    dir: service
+    main: main.go
+    binary: data-cleaner
+    env: [CGO_ENABLED=0]
+    goos: [linux]
+    goarch: [amd64, arm64]
+    ldflags:
+      - >
+        -s -w
+        -X 'github.com/jamesread/data-cleaner/internal/buildinfo.Commit={{.Commit}}'
+        -X 'github.com/jamesread/data-cleaner/internal/buildinfo.BuildDate={{.Date}}'
+        -X 'github.com/jamesread/data-cleaner/internal/buildinfo.Version={{.Version}}'
+
+archives:
+  - ids: [data-cleaner]
+    formats:
+      - "tar.gz"
+    wrap_in_directory: true
+    files:
+      - README.md
+      - LICENSE
+      - src: frontend/dist/
+        dst: webui/
+
+dockers:
+  - dockerfile: Dockerfile
+    image_templates:
+      - ghcr.io/jamesread/data-cleaner:{{ .Tag }}-arm64
+    goarch: arm64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Tag}}"
+    extra_files:
+      - README.md
+      - frontend/dist
+
+  - dockerfile: Dockerfile
+    image_templates:
+      - ghcr.io/jamesread/data-cleaner:{{ .Tag }}-amd64
+    goarch: amd64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Tag}}"
+    extra_files:
+      - README.md
+      - frontend/dist
+
+docker_manifests:
+  - name_template: ghcr.io/jamesread/data-cleaner:{{ .Version }}
+    image_templates:
+      - ghcr.io/jamesread/data-cleaner:{{ .Version }}-amd64
+      - ghcr.io/jamesread/data-cleaner:{{ .Version }}-arm64
+
+  - name_template: ghcr.io/jamesread/data-cleaner:latest
+    image_templates:
+      - ghcr.io/jamesread/data-cleaner:{{ .Version }}-amd64
+      - ghcr.io/jamesread/data-cleaner:{{ .Version }}-arm64
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^build:"
+  groups:
+    - title: 'Security'
+      regexp: '^.*?security(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Features'
+      regexp: '^.*?feat.*?(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Bug fixes'
+      regexp: '^.*?bugfix(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+release:
+  footer: |
+    ## Container images ([from GitHub](https://github.com/jamesread/data-cleaner/pkgs/container/uncomplicated-alert-receiver))
+
+    - `docker pull ghcr.io/jamesread/data-cleaner:{{ .Version }}`
+
+    ## Upgrade warnings, or breaking changes
+
+    - No such issues between the last release and this version.
+
+    ## Useful links
+
+    - [Ask for help and chat with others users in the Discord community](https://discord.gg/jhYWWpNJ3v)
+
+    Thanks for your interest in UAR!
