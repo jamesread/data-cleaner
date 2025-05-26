@@ -46,9 +46,7 @@ func Import() *pb.ImportResponse {
 			continue
 		}
 
-		res.SourceFiles = append(res.SourceFiles, entry.Name())
-
-		parseFile(path.Join(dir, entry.Name()))
+		res.SourceFiles = append(res.SourceFiles, parseFile(dir, entry.Name()))
 	}
 
 	sort.Sort(ByGlobalIndex(dataRows))
@@ -63,11 +61,15 @@ func Import() *pb.ImportResponse {
 func checkRollingTotal(res *pb.ImportResponse) {
 	lastBalance := 0.0
 	lastDate := time.Now()
+	lastFile := "?"
+	lastLineNumber := int64(0)
 
 	for _, row := range dataRows {
 		if row.Index == 0 {
 			lastDate = row.Date
 			lastBalance = row.Balance
+			lastFile = row.Filename
+			lastLineNumber = row.LineNumber
 			continue
 		}
 
@@ -103,24 +105,18 @@ func checkRollingTotal(res *pb.ImportResponse) {
 				Key: "Balance",
 				Val: fmt.Sprintf("%v", row.Balance),
 			})
-			/*
-				issue.LastBalance = lastBalance
-				issue.ExpectedBalance = newBalance
-				issue.Value = row.Value
-				issue.ActualBalance = row.Balance
-				issue.LastDate = lastDate.Format("02 January 2006")
-				issue.RowDate = row.Date.Format("02 January 2006")
-				issue.DateDelta = row.Date.Sub(lastDate).String()
-				issue.Diff = diff
-			*/
 
-			issue.LocationLineNumber = row.LineNumber
-			issue.LocationFilename = row.Filename
+			issue.CurrentLocationLineNumber = row.LineNumber
+			issue.CurrentLocationFilename = row.Filename
+			issue.LastLocationFilename = lastFile
+			issue.LastLocationLineNumber = lastLineNumber
 			res.Issues = append(res.Issues, issue)
 		}
 
+		lastFile = row.Filename
 		lastBalance = row.Balance
 		lastDate = row.Date
+		lastLineNumber = row.LineNumber
 		//		log.Infof("Row: %+v", row)
 	}
 }
@@ -215,7 +211,9 @@ func (a ByGlobalIndex) Len() int           { return len(a) }
 func (a ByGlobalIndex) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByGlobalIndex) Less(i, j int) bool { return a[i].Index < a[j].Index }
 
-func parseFile(filepath string) {
+func parseFile(directory string, filename string) *pb.SourceFile {
+	filepath := path.Join(directory, filename)
+
 	log.Infof("Parsing file: %s", filepath)
 
 	contents, err := os.Open(filepath)
@@ -234,4 +232,9 @@ func parseFile(filepath string) {
 	}
 
 	parseLines(lines, filepath)
+
+	return &pb.SourceFile{
+		Filename: filename,
+		LineCount:     int64(len(lines)),
+	}
 }

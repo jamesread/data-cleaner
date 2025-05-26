@@ -8,28 +8,64 @@
 <body>
 	<header>
 		<h1>data-cleaner</h1>
+
+		<nav>
+			<ul>
+				<li><a href = "/">Index</a></li>
+				<li><a href = "/api/Export">Export</a></li>
+			</ul>
+		</nav>
 	</header>
 
 	<main>
-		<ul id = "issuesList">
+		<div id = "issuesList"></div>
 
-		</ul>
+		<section id = "importFileList">
+			<h2>File List</h2>
+			<ul id = "sourceFiles">
+			</ul>
+		</section>
+
+		<section id = "importSummary">
+			<h2>Stats</h2>
+
+			<div class = "grid-boxed">
+				<div class = "stat-display">
+					<span class = "subtle">Total lines</span>
+					<span class = "stat" id = "totalLines">?</span>
+				</div>
+				<div class = "stat-display">
+					<span class = "subtle">Total files</span>
+					<span class = "stat" id = "totalFiles">?</span>
+				</div>
+			</div>
+		</section>
 	</main>
 
 	<script src = "main.js"></script>
 
 	<template id = "issueTemplate">
-		<li>
+		<section>
 			<h2 class = "description">Details</h2>
 
 			<table class = "detailsTable">
 			</table>
 
-			<h3>Location</h3>
-			<p>
-			<span><strong>Filename:</strong> <span class = "filename">?</span></span>
-			<span><strong>Line Number:</strong> <span class = "lineNumber">?</span></span>
-			</p>
-		</li>
+			<h3>Current Location</h3>
+			<table>
+				<tr>
+					<td class = "uneditable">
+						Last Filename:
+					</td>
+					<td>
+						<span class = "lastFilename">?</span> : <td><span class = "lastLineNumber">?</span>
+					</td>
+				</tr>
+				<tr>
+					<td class = "uneditable">Current Filename:</td>
+					<td><span class = "filename">?</span> : <td><span class = "lineNumber">?</span></td>
+				</tr>
+			</table>
+		</section>
 	</template>
 </body>
