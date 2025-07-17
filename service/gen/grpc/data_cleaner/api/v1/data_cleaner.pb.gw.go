@@ -40,7 +40,6 @@ func request_DataCleanerService_Import_0(ctx context.Context, marshaler runtime.
 		protoReq ImportRequest
 		metadata runtime.ServerMetadata
 	)
-	io.Copy(io.Discard, req.Body)
 	msg, err := client.Import(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -59,7 +58,6 @@ func request_DataCleanerService_Export_0(ctx context.Context, marshaler runtime.
 		protoReq ExportRequest
 		metadata runtime.ServerMetadata
 	)
-	io.Copy(io.Discard, req.Body)
 	msg, err := client.Export(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -78,7 +76,6 @@ func request_DataCleanerService_Reload_0(ctx context.Context, marshaler runtime.
 		protoReq ReloadRequest
 		metadata runtime.ServerMetadata
 	)
-	io.Copy(io.Discard, req.Body)
 	msg, err := client.Reload(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
