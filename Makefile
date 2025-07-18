@@ -8,4 +8,7 @@ proto: protocol
 protocol:
 	$(MAKE) -wC proto buf
 
-.PHONY: service protocol
+frontend:
+	$(MAKE) -wC frontend
+
+.PHONY: service protocol frontend
