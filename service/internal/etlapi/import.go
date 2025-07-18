@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/csv"
 	"fmt"
-	pb "github.com/jamesread/data-cleaner/gen/grpc/data_cleaner/api/v1"
+	pb "github.com/jamesread/data-cleaner/gen/data_cleaner/api/v1"
 	"github.com/jamesread/data-cleaner/internal/config"
 	log "github.com/sirupsen/logrus"
 	"math"
@@ -170,26 +170,23 @@ func (api *EtlApi) parseLines(lines [][]string, filename string) {
 					log.Warnf("failed to parse date: %v", err)
 				}
 
-				break
+				continue
 			case 1: // Transaction type
 			case 2: // Sort Code
 			case 3: // Account Number
-				break
+				continue
 			case 4: // Transaction Description
 				rec.Description = value
 			case 5:
 				rec.Value = -parseMoney(value)
-				break
 			case 6:
 				if rec.Value != 0 {
 					break
 				}
 
 				rec.Value = parseMoney(value)
-				break
 			case 7:
 				rec.Balance = parseMoney(value)
-				break
 			default:
 				log.Infof("Field %d: %s", column, value)
 			}
@@ -221,13 +218,18 @@ func (api *EtlApi) parseFile(directory string, filename string) *pb.SourceFile {
 		log.Fatalf("failed to read file: %v", err)
 	}
 
-	defer contents.Close()
 
 	csvReader := csv.NewReader(contents)
 	lines, err := csvReader.ReadAll()
 
 	if err != nil {
 		log.Fatalf("failed to read csv: %v", err)
+	}
+
+	err = contents.Close()
+
+	if err != nil {
+		log.Fatalf("failed to close file: %v", err)
 	}
 
 	api.parseLines(lines, filepath)

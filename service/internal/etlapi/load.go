@@ -1,7 +1,7 @@
 package api
 
 import (
-	pb "github.com/jamesread/data-cleaner/gen/grpc/data_cleaner/api/v1"
+	pb "github.com/jamesread/data-cleaner/gen/data_cleaner/api/v1"
 	"github.com/jamesread/data-cleaner/internal/config"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -33,8 +33,22 @@ func (c *MySQLConnector) Connect() error {
 }
 
 func (c *MySQLConnector) Load(dataRows []DataRow, columnMap map[int]string) error {
-	stmt, err := c.conn.Prepare("TRUNCATE TABLE " + c.Properties["table"])
-	stmt.Exec()
+	tableName := c.Properties["table"]
+	stmt, err := c.conn.Prepare("TRUNCATE TABLE " + tableName)
+
+	if err != nil {
+		return fmt.Errorf("failed to prepare truncate statement for table %s: %v", tableName, err)
+	}
+
+	_, err = stmt.Exec()
+
+	if err != nil {
+		log.Errorf("Failed to truncate table %s: %v", c.Properties["table"], err)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to truncate table %s: %v", c.Properties["table"], err)
+	}
 
 	stmt, err = c.conn.Prepare(prepareStatement(columnMap, c.Properties["table"]))
 
@@ -66,12 +80,6 @@ func (c *MySQLConnector) Load(dataRows []DataRow, columnMap map[int]string) erro
 func prepareStatement(columnMap map[int]string, tableName string) string {
 	sql := fmt.Sprintf("INSERT INTO %v (", tableName)
 
-	cols := make([]string, 0, len(columnMap))
-
-	for _, colName := range columnMap {
-		cols = append(cols, colName)
-	}
-
 	for i := 0; i < len(columnMap); i++ {
 		sql += columnMap[i]
 
@@ -82,7 +90,7 @@ func prepareStatement(columnMap map[int]string, tableName string) string {
 
 	sql += ") VALUES (?, ?, ?, ?, ?)"
 	
-	log.Infof("Executing SQL:", sql)
+	log.Infof("Executing SQL: %v", sql)
 
 	return sql
 }
@@ -95,9 +103,18 @@ func (api *EtlApi) Load() *pb.LoadResponse {
 	ldconfig := config.GetConfig().Load
 
 	connector := initConnector(ldconfig.Destination, config.GetConfig())
-	connector.Connect()
+	err := connector.Connect()
 
-	connector.Load(api.Transform(), ldconfig.ColumnMap)
+	if err != nil {
+		log.Errorf("Failed to connect to destination: %v", err)
+		return res
+	}
+
+	err = connector.Load(api.Transform(), ldconfig.ColumnMap)
+
+	if err != nil {
+		log.Errorf("Failed to load data: %v", err)
+	}
 
 	return res;
 }

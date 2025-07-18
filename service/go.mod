@@ -1,8 +1,8 @@
 module github.com/jamesread/data-cleaner
 
-go 1.23.0
+go 1.23.8
 
-toolchain go1.24.1
+toolchain go1.24.4
 
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.25.1
@@ -14,8 +14,10 @@ require (
 )
 
 require (
+	connectrpc.com/connect v1.18.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
+	github.com/jamesread/golure v0.0.0-20250619190948-fa38cbd93cc4 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	golang.org/x/net v0.38.0 // indirect

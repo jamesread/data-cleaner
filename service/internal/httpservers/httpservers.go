@@ -1,61 +1,29 @@
 package httpservers
 
 import (
-	"context"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	pb "github.com/jamesread/data-cleaner/gen/grpc/data_cleaner/api/v1"
-	"github.com/jamesread/data-cleaner/internal/config"
+	"github.com/jamesread/data-cleaner/internal/frontend"
+	"github.com/jamesread/data-cleaner/internal/api"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
+
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
-var cfg *config.Config
-
 func Start() {
-	cfg = config.GetConfig()
-
-	go startRestApiServer()
-
-	go startSingleFrontend()
-}
-
-func startRestApiServer() {
-	mux := runtime.NewServeMux()
-
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-
-	pb.RegisterDataCleanerServiceHandlerFromEndpoint(context.Background(), mux, cfg.Network.BindGrpc, opts)
-
-	srv := &http.Server{
-		Addr:    ":8081",
-		Handler: mux,
-	}
-
-	err := srv.ListenAndServe()
-
-	if err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
-}
-
-func startSingleFrontend() {
-	apiUrl, _ := url.Parse("http://" + cfg.Network.BindRest)
-	apiProxy := httputil.NewSingleHostReverseProxy(apiUrl)
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
-		apiProxy.ServeHTTP(w, r)
-	})
-	mux.Handle("/", http.FileServer(http.Dir("../frontend/")))
-	srv := &http.Server{
-		Addr:    cfg.Network.BindProxy,
-		Handler: mux,
-	}
 
-	log.Infof("Starting proxy on %s", cfg.Network.BindProxy)
+	apipath, apihandler := api.GetNewHandler()
+
+	log.Infof("API path: /api/%s", apipath)
+
+	mux.Handle("/api"+apipath, http.StripPrefix("/api", apihandler))
+	mux.Handle("/", http.StripPrefix("/", frontend.GetNewHandler()))
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: h2c.NewHandler(mux, &http2.Server{}),
+	}
 
 	err := srv.ListenAndServe()
 

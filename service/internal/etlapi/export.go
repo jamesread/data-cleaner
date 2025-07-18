@@ -22,7 +22,12 @@ func (api *EtlApi) Export(notNullColumns int64) []byte {
 	writer := csv.NewWriter(buf)
 
 	for _, row := range api.Transform() {
-		writer.Write(row.ToSlice())
+		err := writer.Write(row.ToSlice())
+
+		if err != nil {
+			log.Errorf("Error writing row to CSV: %v", err)
+			continue
+		}
 	}
 
 	writer.Flush()

@@ -1,3 +1,8 @@
+import { createClient } from '@connectrpc/connect';
+import { createConnectTransport } from '@connectrpc/connect-web';
+
+import { DataCleanerService } from './resources/javascript/gen/data_cleaner/api/v1/data_cleaner_pb';
+
 const moneyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
@@ -87,38 +92,42 @@ function displaySourceFiles (summary) {
   }
 }
 
-function main () {
-  window.fetch('./api/Import')
-    .then(response => {
-      if (!response.ok) {
-        showBigError('Failed to fetch issues: ' + response.statusText)
-      } else {
-        return response.json()
+function createApiClient () {
+  const transport = createConnectTransport({
+    baseUrl: './api',
+  })
+
+  window.apiClient = createClient(DataCleanerService, transport)
+}
+
+export async function main () {
+  createApiClient()
+
+  try { 
+    const res = await window.apiClient.import()
+
+    if (res.issues.length === 0) {
+      const msg = document.createElement('p')
+      msg.classList.add('inline-notification')
+      msg.classList.add('good')
+      msg.innerText = 'No issues found!'
+
+      document.getElementById('issuesList').appendChild(msg)
+
+      document.getElementById('loadJobButton').removeAttribute('disabled')
+      document.getElementById('loadJobButton').onclick = () => {
+        loadJob()
       }
-    })
-    .then(res => {
-      if (res.issues.length === 0) {
-        const msg = document.createElement('p')
-        msg.classList.add('inline-notification')
-        msg.classList.add('good')
-        msg.innerText = 'No issues found!'
+    } else {
+      displayIssues(res.issues)
+    }
 
-        document.getElementById('issuesList').appendChild(msg)
-
-        document.getElementById('loadJobButton').removeAttribute('disabled')
-        document.getElementById('loadJobButton').onclick = () => {
-          loadJob()
-        }
-      } else {
-        displayIssues(res.issues)
-      }
-
-      displaySourceFiles(res)
-      displaySummary(res)
-      displayTransformations(res.transformations)
-
-    })
-    .catch(error => showBigError(error))
+    displaySourceFiles(res)
+    displaySummary(res)
+    displayTransformations(res.transformations)
+  } catch (error) {
+    showBigError('Failed to import: ' + error.message)
+  }
 }
 
 function displayTransformations (transformations) {
@@ -140,24 +149,21 @@ function loadJob () {
 
   console.log(loadButton)
 
-  window.fetch('./api/Load')
-    .then(response => {
-      if (!response.ok) {
-        showBigError('Failed to load: ' + response.statusText)
-      } else {
-        return response.json()
-      }
-    })
-    .then(res => {
-      loadButton.classList.add('good')
-      loadButton.innerText = 'Loaded successfully!';
+  try {
+    const response = window.apiClient.load()
 
-      setTimeout(() => {
-        loadButton.removeAttribute('disabled')
-        loadButton.innerText = 'Load';
-      }, 1000)
-      console.log('Job loaded successfully:', res)
-    })
+    loadButton.classList.add('good')
+    loadButton.innerText = 'Loaded successfully!';
+
+    setTimeout(() => {
+      loadButton.removeAttribute('disabled')
+      loadButton.innerText = 'Load';
+    }, 1000)
+
+    console.log('Job loaded successfully:', response)
+  } catch (error) {
+    showBigError('Failed to load: ' + error.message)
+  }
 }
 
 function showBigError (error) {

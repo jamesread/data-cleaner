@@ -1,19 +1,13 @@
-version: v1
+version: v2
 plugins:
-  - name: go
-    out: ../service/gen/grpc/
+  - remote: buf.build/protocolbuffers/go
+    out: ../service/gen/
     opt: paths=source_relative
 
-  - name: go-grpc
-    out: ../service/gen/grpc/
-    opt: paths=source_relative,require_unimplemented_servers=false
-
-  - name: grpc-gateway
-    out: ../service/gen/grpc/
+  - remote: buf.build/connectrpc/go
+    out: ../service/gen/
     opt: paths=source_relative
 
-#  - name: swagger
-#    out: reports/swagger
-
-#  - name: openapiv2
-#    out: reports/openapiv2
+  - remote: buf.build/bufbuild/es
+    out: ../frontend/resources/javascript/gen/
+    opt: target=ts

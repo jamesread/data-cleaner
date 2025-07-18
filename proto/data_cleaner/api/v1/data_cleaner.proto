@@ -2,10 +2,7 @@ syntax = "proto3";
 
 package data_cleaner.api.v1;
 
-option go_package = "gen/grpc";
-
-import "google/api/annotations.proto";
-import "google/api/httpbody.proto";
+option go_package = "github.com/jamesread/data-cleaner/gen/data_cleaner/api/v1;dcapiv1";
 
 message ImportRequest {
 }
@@ -55,6 +52,8 @@ message ExportRequest {
   bool run_import = 2;
 }
 
+message ExportResponse {}
+
 message ReloadRequest {}
 
 message ReloadResponse {}
@@ -65,28 +64,13 @@ message LoadRequest {
 message LoadResponse {
 }
 
+
 service DataCleanerService {
-	rpc Import(ImportRequest) returns (ImportResponse) {
-		option (google.api.http) = {
-			get: "/api/Import"
-		};
-	}
+	rpc Import(ImportRequest) returns (ImportResponse) {}
 
-    rpc Export(ExportRequest) returns (google.api.HttpBody) {
-        option (google.api.http) = {
-            get: "/api/Export"
-        };
-    }
+    rpc Export(ExportRequest) returns (ExportResponse) {}
 
-    rpc Reload(ReloadRequest) returns (ReloadResponse) {
-        option (google.api.http) = {
-            get: "/api/Reload"
-        };
-    }
+    rpc Reload(ReloadRequest) returns (ReloadResponse) {}
     
-    rpc Load(LoadRequest) returns (LoadResponse) {
-        option (google.api.http) = {
-            get: "/api/Load"
-        };
-    }
+    rpc Load(LoadRequest) returns (LoadResponse) {}
 }
