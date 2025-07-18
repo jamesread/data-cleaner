@@ -34,7 +34,6 @@ function displayIssues (issues) {
     dom.querySelector('.lastFilename').innerText = issue.lastLocationFilename
     dom.querySelector('.lastLineNumber').innerText = issue.lastLocationLineNumber
 
-
     list.appendChild(dom)
   }
 }
@@ -71,10 +70,20 @@ function displaySummary (summary) {
 function displaySourceFiles (summary) {
   const dom = document.getElementById('sourceFiles')
 
+  const tbl = dom.querySelector('tbody')
+
   for (const sourceFile of summary.sourceFiles) {
-    const file = document.createElement('li')
-    file.innerText = sourceFile.filename + ' (' + sourceFile.lineCount + ' lines)'
-    dom.appendChild(file)
+    const row = document.createElement('tr')
+
+    const filename = document.createElement('td')
+    filename.innerText = sourceFile.filename
+    row.appendChild(filename)
+
+    const lineCount = document.createElement('td')
+    lineCount.innerText = sourceFile.lineCount
+    row.appendChild(lineCount)
+
+    tbl.appendChild(row)
   }
 }
 
@@ -89,17 +98,66 @@ function main () {
     })
     .then(res => {
       if (res.issues.length === 0) {
-        const msg = document.createElement('li')
+        const msg = document.createElement('p')
+        msg.classList.add('inline-notification')
+        msg.classList.add('good')
         msg.innerText = 'No issues found!'
 
         document.getElementById('issuesList').appendChild(msg)
+
+        document.getElementById('loadJobButton').removeAttribute('disabled')
+        document.getElementById('loadJobButton').onclick = () => {
+          loadJob()
+        }
       } else {
         displayIssues(res.issues)
-        displaySourceFiles(res)
-        displaySummary(res)
       }
+
+      displaySourceFiles(res)
+      displaySummary(res)
+      displayTransformations(res.transformations)
+
     })
     .catch(error => showBigError(error))
+}
+
+function displayTransformations (transformations) {
+  const dom = document.getElementById('transformStatus')
+
+  for (const transformation of transformations) {
+    const li = document.createElement('li')
+
+    li.innerText = transformation.description
+    dom.appendChild(li)
+  }
+}
+
+function loadJob () {
+  const loadButton = document.getElementById('loadJobButton')
+  loadButton.setAttribute('disabled', true)
+  loadButton.classList.remove('good')
+  loadButton.innerText = 'Loading';
+
+  console.log(loadButton)
+
+  window.fetch('./api/Load')
+    .then(response => {
+      if (!response.ok) {
+        showBigError('Failed to load: ' + response.statusText)
+      } else {
+        return response.json()
+      }
+    })
+    .then(res => {
+      loadButton.classList.add('good')
+      loadButton.innerText = 'Loaded successfully!';
+
+      setTimeout(() => {
+        loadButton.removeAttribute('disabled')
+        loadButton.innerText = 'Load';
+      }, 1000)
+      console.log('Job loaded successfully:', res)
+    })
 }
 
 function showBigError (error) {

@@ -8,10 +8,28 @@ import (
 )
 
 type Config struct {
-	ImportDirectory string
 	Csv             *CsvConfig
-	Replacements    *ReplacementsConfig
+
+	Connections     map[string]map[string]string
+
+	Extract         *ExtractConfig
+	Transform       *TransformConfig
+	Load            *LoadConfig
+
 	Network         *NetworkConfig
+}
+
+type ExtractConfig struct {
+	ImportDirectory string
+}
+
+type LoadConfig struct {
+    Destination string
+	ColumnMap map[int]string
+}
+
+type TransformConfig struct {
+	Replacements    *ReplacementsConfig
 }
 
 type CsvConfig struct {
@@ -41,7 +59,9 @@ func GetConfig() *Config {
 
 func newDefaultConfig() *Config {
 	return &Config{
-		ImportDirectory: "/opt/import/",
+		Extract: &ExtractConfig {
+			ImportDirectory: "/opt/import/",
+		},
 		Network: &NetworkConfig{
 			BindGrpc:  "127.0.0.1:50051",
 			BindRest:  "127.0.0.1:8081",
@@ -50,9 +70,11 @@ func newDefaultConfig() *Config {
 		Csv: &CsvConfig{
 			Header: true,
 		},
-		Replacements: &ReplacementsConfig{
-			Exact: map[string]string{},
-			Regex: map[string]string{},
+		Transform: &TransformConfig{
+			Replacements: &ReplacementsConfig{
+				Exact: map[string]string{},
+				Regex: map[string]string{},
+			},
 		},
 	}
 }

@@ -2,32 +2,48 @@
 
 <head>
 	<title>data-cleaner</title>
-	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="style.css" />
+
+	<link rel = "shortcut icon" href = "logo.png" type = "image/png" />
 </head>
 
 <body>
 	<header>
-		<h1>data-cleaner</h1>
+		<div class = "logo-and-title">
+			<img src = "logo.png" alt = "data-cleaner logo" class = "logo" />
+			<h1>data-cleaner</h1>
+		</div>
 
 		<nav>
 			<ul>
-				<li><a href = "/">Index</a></li>
-				<li><a href = "/api/Export">Export</a></li>
+				<li><a href = "/">Home</a></li>
 			</ul>
 		</nav>
 	</header>
 
 	<main>
-		<div id = "issuesList"></div>
+		<div id = "issuesList">
+		</div>
 
 		<section id = "importFileList">
-			<h2>File List</h2>
-			<ul id = "sourceFiles">
-			</ul>
-		</section>
+			<h2>Extract / Import</h2>
+			<h3>File List</h3>
+			<p>
+				These are the files that have been imported.
+			</p>
+			<table id = "sourceFiles" class = "hover datatable">
+				<thead>
+					<tr>
+						<th>Filename</th>
+						<th>Lines</th>
+					</tr>
+				</thead>
+				<tbody>
+					<!-- File entries will be populated here -->
+				</tbody>
+			</table>
 
-		<section id = "importSummary">
-			<h2>Stats</h2>
+			<h3>Stats</h3>
 
 			<div class = "grid-boxed">
 				<div class = "stat-display">
@@ -39,6 +55,23 @@
 					<span class = "stat" id = "totalFiles">?</span>
 				</div>
 			</div>
+
+			<h3>Export</h3>
+			<p>You can download a CSV file of the imported data here;</p>
+			<a href = "/api/Export" class = "button good">Download CSV</a>
+		</section>
+
+		<section>
+			<h2>Transform</h2>
+			<p>Transformations are applied automatically.</p>
+			<p id = "transformStatus"></p>
+		</section>
+
+		<section id = "loadJob">
+			<h2>Load</h2>
+			<p>To start the load job, click the button below.</p>
+		
+			<button id = "loadJobButton" class = "good" disabled>Load</button>
 		</section>
 	</main>
 

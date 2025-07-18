@@ -15,6 +15,12 @@ message ImportResponse {
   string completed_date = 2;
   int64 total_lines = 3;
   repeated SourceFile source_files = 4;
+  repeated Transformation transformations = 5;
+}
+
+message Transformation {
+  string name = 1;
+  string description = 2;
 }
 
 message SourceFile {
@@ -44,11 +50,20 @@ message RowAttribute {
     string val = 2;
 }
 
-message ExportRequest {}
+message ExportRequest {
+  int64 not_null_columns = 1;
+  bool run_import = 2;
+}
 
 message ReloadRequest {}
 
 message ReloadResponse {}
+
+message LoadRequest {
+}
+
+message LoadResponse {
+}
 
 service DataCleanerService {
 	rpc Import(ImportRequest) returns (ImportResponse) {
@@ -66,6 +81,12 @@ service DataCleanerService {
     rpc Reload(ReloadRequest) returns (ReloadResponse) {
         option (google.api.http) = {
             get: "/api/Reload"
+        };
+    }
+    
+    rpc Load(LoadRequest) returns (LoadResponse) {
+        option (google.api.http) = {
+            get: "/api/Load"
         };
     }
 }

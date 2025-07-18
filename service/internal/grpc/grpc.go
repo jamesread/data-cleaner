@@ -2,8 +2,8 @@ package grpc
 
 import (
 	"context"
-	pb "github.com/jamesread/data-cleaner/gen/grpc"
-	"github.com/jamesread/data-cleaner/internal/api"
+	pb "github.com/jamesread/data-cleaner/gen/grpc/data_cleaner/api/v1"
+	etlapi "github.com/jamesread/data-cleaner/internal/api"
 	"github.com/jamesread/data-cleaner/internal/config"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/api/httpbody"
@@ -12,16 +12,21 @@ import (
 )
 
 type dataCleanerApi struct {
+	etl *etlapi.EtlApi
 }
 
 func (s *dataCleanerApi) Import(ctx context.Context, in *pb.ImportRequest) (*pb.ImportResponse, error) {
-	res := api.Import()
+	res := s.etl.Import()
 
 	return res, nil
 }
 
 func (s *dataCleanerApi) Export(ctx context.Context, in *pb.ExportRequest) (*httpbody.HttpBody, error) {
-	csvdata := api.Export()
+	if in.RunImport {
+		s.etl.Import()
+	}
+
+	csvdata := s.etl.Export(in.NotNullColumns)
 
 	ret := &httpbody.HttpBody{
 		ContentType: "text/plain",
@@ -37,8 +42,18 @@ func (s *dataCleanerApi) Reload(ctx context.Context, in *pb.ReloadRequest) (*pb.
 	return &pb.ReloadResponse{}, nil
 }
 
+func (s *dataCleanerApi) Load(ctx context.Context, in *pb.LoadRequest) (*pb.LoadResponse, error) {
+	s.etl.Load()
+
+	res := &pb.LoadResponse{
+	}
+
+	return res, nil
+}
+
 func newServer() *dataCleanerApi {
 	server := &dataCleanerApi{}
+	server.etl = etlapi.NewEtlApi()
 	return server
 }
 

@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/csv"
 	"fmt"
-	pb "github.com/jamesread/data-cleaner/gen/grpc"
+	pb "github.com/jamesread/data-cleaner/gen/grpc/data_cleaner/api/v1"
 	"github.com/jamesread/data-cleaner/internal/config"
 	log "github.com/sirupsen/logrus"
 	"math"
@@ -15,17 +15,17 @@ import (
 	"time"
 )
 
-func Import() *pb.ImportResponse {
+func (api *EtlApi) Import() *pb.ImportResponse {
 	log.Infof("Starting new import")
 
 	res := &pb.ImportResponse{
 		Issues: make([]*pb.Issue, 0),
 	}
 
-	dataRows = []StatementRow{}
-	globalIndex = 0
+	api.dataRows = make([]StatementRow, 0)
+	api.globalIndex = 0
 
-	dir := config.GetConfig().ImportDirectory
+	dir := config.GetConfig().Extract.ImportDirectory
 
 	entries, err := os.ReadDir(dir)
 
@@ -46,25 +46,28 @@ func Import() *pb.ImportResponse {
 			continue
 		}
 
-		res.SourceFiles = append(res.SourceFiles, parseFile(dir, entry.Name()))
+		res.SourceFiles = append(res.SourceFiles, api.parseFile(dir, entry.Name()))
 	}
 
-	sort.Sort(ByGlobalIndex(dataRows))
-	checkRollingTotal(res)
+	sort.Sort(ByGlobalIndex(api.dataRows))
+	api.checkRollingTotal(res)
 
-	res.TotalLines = int64(len(dataRows))
+	res.TotalLines = int64(len(api.dataRows))
 	res.CompletedDate = time.Now().Format(time.RFC3339)
+
+	res.Transformations = append(res.Transformations, &pb.Transformation{ Description: fmt.Sprintf("Exact replacements: %v", len(config.GetConfig().Transform.Replacements.Exact))})
+	res.Transformations = append(res.Transformations, &pb.Transformation{ Description: fmt.Sprintf("Regex replacements: %v", len(config.GetConfig().Transform.Replacements.Regex))})
 
 	return res
 }
 
-func checkRollingTotal(res *pb.ImportResponse) {
+func (api *EtlApi) checkRollingTotal(res *pb.ImportResponse) {
 	lastBalance := 0.0
 	lastDate := time.Now()
 	lastFile := "?"
 	lastLineNumber := int64(0)
 
-	for _, row := range dataRows {
+	for _, row := range api.dataRows {
 		if row.Index == 0 {
 			lastDate = row.Date
 			lastBalance = row.Balance
@@ -145,7 +148,7 @@ func parseMoney(value string) float64 {
 	return v
 }
 
-func parseLines(lines [][]string, filename string) {
+func (api *EtlApi) parseLines(lines [][]string, filename string) {
 	var err error
 
 	// Skip the first line and iterate in reverse
@@ -192,18 +195,14 @@ func parseLines(lines [][]string, filename string) {
 			}
 		}
 
-		rec.Index = globalIndex
+		rec.Index = api.globalIndex
 		rec.LineNumber = int64(lineNumber)
 		rec.Filename = filename
 
-		dataRows = append(dataRows, rec)
-		globalIndex++
+		api.dataRows = append(api.dataRows, rec)
+		api.globalIndex++
 	}
 }
-
-var globalIndex = 0
-
-var dataRows []StatementRow
 
 type ByGlobalIndex []StatementRow
 
@@ -211,7 +210,7 @@ func (a ByGlobalIndex) Len() int           { return len(a) }
 func (a ByGlobalIndex) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByGlobalIndex) Less(i, j int) bool { return a[i].Index < a[j].Index }
 
-func parseFile(directory string, filename string) *pb.SourceFile {
+func (api *EtlApi) parseFile(directory string, filename string) *pb.SourceFile {
 	filepath := path.Join(directory, filename)
 
 	log.Infof("Parsing file: %s", filepath)
@@ -231,7 +230,7 @@ func parseFile(directory string, filename string) *pb.SourceFile {
 		log.Fatalf("failed to read csv: %v", err)
 	}
 
-	parseLines(lines, filepath)
+	api.parseLines(lines, filepath)
 
 	return &pb.SourceFile{
 		Filename: filename,

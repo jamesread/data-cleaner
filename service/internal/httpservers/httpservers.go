@@ -3,7 +3,7 @@ package httpservers
 import (
 	"context"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	pb "github.com/jamesread/data-cleaner/gen/grpc"
+	pb "github.com/jamesread/data-cleaner/gen/grpc/data_cleaner/api/v1"
 	"github.com/jamesread/data-cleaner/internal/config"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
